@@ -13,6 +13,7 @@ client.on("ready",() => {
 
 client.on("message" ,async msg => {
     if(msg.content == prefix + "invoke"){
+      msg.delete();
       msg.channel.send("hello")
       .then(async msg => {
         try{
@@ -27,11 +28,13 @@ client.on("message" ,async msg => {
         const filter = (reaction,user) => 
           {return ['⬅️','⬇️','➡️','⬆️'].includes(reaction.emoji.name)}
         
-        msg.awaitReactions(filter,{max:1,time:6000,errors:['time']})
-        .then(collected => {
-          const move = collected.first().emoji.name;
-          msg.edit(move).then(()=>console.log("succ")).catch((err)=>console.log("sad tormbone"))
-        })  
+        const collector = msg.createReactionCollector(filter, {idle: 15000 });
+        collector.on("collect",async react => {
+          console.log(react.emoji.name)
+          await react.message.edit(react.emoji.name)
+          await react.users.remove(react.users.cache.last().id);
+        });
+        collector.on('end',() => {msg.delete()});
       })
       .catch((err)=>console.log(err))
     }
